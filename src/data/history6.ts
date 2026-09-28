@@ -24,7 +24,26 @@ export type OrderQuestion = {
   explanation: string;
 };
 
-export type Question = ChoiceQuestion | OrderQuestion;
+export type NumberQuestion = {
+  id: string;
+  kind: 'number';
+  title: string;
+  prompt: string;
+  correct: number;
+  points: number;
+  explanation: string;
+};
+
+export type SelfCheckQuestion = {
+  id: string;
+  kind: 'self-check';
+  title: string;
+  prompt: string;
+  checklist: string[];
+  points: number;
+};
+
+export type Question = ChoiceQuestion | OrderQuestion | NumberQuestion | SelfCheckQuestion;
 
 // Рабочие источники контента. Они не выводятся в интерфейсе: позже их заменит
 // привязка к страницам пользовательского PDF.

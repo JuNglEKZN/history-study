@@ -1,8 +1,9 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { activeParagraph, history6, type Question } from './data/history6';
+import { controlWork1 } from './data/controlWork1';
 
 type Tab = 'today' | 'topics' | 'timeline';
-type View = 'tabs' | 'paragraph' | 'settings';
+type View = 'tabs' | 'paragraph' | 'control' | 'settings';
 
 type Profile = {
   goalName: string;
@@ -44,13 +45,14 @@ function App() {
     localStorage.setItem('history-study-profile', JSON.stringify(profile));
   }, [profile]);
 
-  const earnedPoints = activeParagraph.questions
+  const allQuestions = [...activeParagraph.questions, ...controlWork1.variants.flatMap((variant) => variant.questions)];
+  const earnedPoints = allQuestions
     .filter((question) => profile.earnedQuestionIds.includes(question.id))
     .reduce((total, question) => total + question.points, 0);
   const studySavings = Math.floor(earnedPoints / 500) * 500;
   const totalSavings = profile.externalSavings + studySavings;
   const goalProgress = profile.goalAmount > 0 ? (totalSavings / profile.goalAmount) * 100 : 0;
-  const completedQuestions = profile.earnedQuestionIds.length;
+  const completedQuestions = activeParagraph.questions.filter((question) => profile.earnedQuestionIds.includes(question.id)).length;
 
   const award = (question: Question) => {
     setProfile((current) => current.earnedQuestionIds.includes(question.id)
@@ -60,6 +62,9 @@ function App() {
 
   if (view === 'paragraph') {
     return <ParagraphScreen onBack={() => setView('tabs')} profile={profile} award={award} />;
+  }
+  if (view === 'control') {
+    return <ControlWorkScreen onBack={() => setView('tabs')} profile={profile} award={award} />;
   }
   if (view === 'settings') {
     return <SettingsScreen profile={profile} onSave={setProfile} onBack={() => setView('tabs')} />;
@@ -87,6 +92,7 @@ function App() {
           completedQuestions={completedQuestions}
           onContinue={() => setView('paragraph')}
           onSettings={() => setView('settings')}
+          onControl={() => setView('control')}
         />
       )}
       {tab === 'topics' && <TopicsScreen onOpen={() => setView('paragraph')} />}
@@ -101,8 +107,8 @@ function App() {
   );
 }
 
-function TodayScreen({ goalName, goalAmount, goalProgress, totalSavings, earnedPoints, completedQuestions, onContinue, onSettings }: {
-  goalName: string; goalAmount: number; goalProgress: number; totalSavings: number; earnedPoints: number; completedQuestions: number; onContinue: () => void; onSettings: () => void;
+function TodayScreen({ goalName, goalAmount, goalProgress, totalSavings, earnedPoints, completedQuestions, onContinue, onSettings, onControl }: {
+  goalName: string; goalAmount: number; goalProgress: number; totalSavings: number; earnedPoints: number; completedQuestions: number; onContinue: () => void; onSettings: () => void; onControl: () => void;
 }) {
   const remaining = activeParagraph.questions.length - completedQuestions;
   return <section className="screen-content">
@@ -128,6 +134,11 @@ function TodayScreen({ goalName, goalAmount, goalProgress, totalSavings, earnedP
       <div><strong>Вернись к пройденному</strong><p>Повторение появится здесь после нескольких тем.</p></div>
       <span className="chevron">›</span>
     </section>
+    <button className="small-card control-card" onClick={onControl}>
+      <span className="icon-bubble">✓</span>
+      <div><strong>Проверочная работа №1</strong><p>Два варианта · 10 заданий</p></div>
+      <span className="chevron">›</span>
+    </button>
     <p className="footer-note">Очки начисляются за верно выполненное задание один раз.</p>
   </section>;
 }
@@ -178,13 +189,37 @@ function ParagraphScreen({ onBack, profile, award }: { onBack: () => void; profi
   </main>;
 }
 
+function ControlWorkScreen({ onBack, profile, award }: { onBack: () => void; profile: Profile; award: (question: Question) => void }) {
+  const [variantId, setVariantId] = useState<'v1' | 'v2'>('v1');
+  const variant = controlWork1.variants.find((item) => item.id === variantId)!;
+  const totalPoints = variant.questions.reduce((sum, question) => sum + question.points, 0);
+  return <main className="detail-shell">
+    <header className="detail-header"><button onClick={onBack} className="back-button">←</button><span>Проверочная работа</span><span className="header-placeholder" /></header>
+    <section className="detail-content">
+      <p className="chapter-label">{controlWork1.subtitle}</p>
+      <h1>{controlWork1.title}</h1>
+      <p className="question-banner">Выбери вариант. У заданий с развёрнутым ответом после текста появится чек-лист для самопроверки.</p>
+      <div className="variant-switch" role="tablist" aria-label="Вариант проверочной работы">
+        {controlWork1.variants.map((item) => <button role="tab" aria-selected={variantId === item.id} className={variantId === item.id ? 'active' : ''} key={item.id} onClick={() => setVariantId(item.id)}>{item.label}</button>)}
+      </div>
+      <section className="section-block"><div className="section-title-row"><h2>{variant.label}</h2><span className="points-badge">+{totalPoints} очков</span></div><p className="muted">Очки за выполненное задание начисляются один раз.</p>{variant.questions.map((question) => <QuestionCard key={question.id} question={question} solved={profile.earnedQuestionIds.includes(question.id)} onCorrect={() => award(question)} />)}</section>
+    </section>
+  </main>;
+}
+
 function QuestionCard({ question, solved, onCorrect }: { question: Question; solved: boolean; onCorrect: () => void }) {
   const [selection, setSelection] = useState<number[]>([]);
   const [order, setOrder] = useState<string[]>([]);
+  const [answerText, setAnswerText] = useState('');
+  const [selfCheckVisible, setSelfCheckVisible] = useState(solved);
   const [result, setResult] = useState<'correct' | 'wrong' | null>(solved ? 'correct' : null);
   const isCorrect = question.kind === 'order'
     ? order.join('|') === question.correct.join('|')
-    : selection.length === question.correct.length && selection.every((item) => question.correct.includes(item));
+    : question.kind === 'number'
+      ? Number(answerText) === question.correct
+      : question.kind === 'self-check'
+        ? false
+        : selection.length === question.correct.length && selection.every((item) => question.correct.includes(item));
 
   const toggleChoice = (index: number) => {
     if (result === 'correct') return;
@@ -196,16 +231,19 @@ function QuestionCard({ question, solved, onCorrect }: { question: Question; sol
     setOrder((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   };
   const check = () => {
-    if (!selection.length && !order.length) return;
+    if (question.kind === 'self-check') { setSelfCheckVisible(true); return; }
+    if (question.kind === 'number' && !answerText.trim()) return;
+    if ((question.kind === 'single' || question.kind === 'multiple') && !selection.length) return;
+    if (question.kind === 'order' && !order.length) return;
     if (isCorrect) { setResult('correct'); onCorrect(); } else setResult('wrong');
   };
-  const canCheck = question.kind === 'order' ? order.length === question.options.length : selection.length > 0;
+  const canCheck = question.kind === 'order' ? order.length === question.options.length : question.kind === 'number' ? answerText.trim().length > 0 : question.kind === 'self-check' ? answerText.trim().length > 0 : selection.length > 0;
 
   return <article className={`question-card ${result ?? ''}`}>
     <div className="question-top"><span>{question.title}</span><b>+{question.points}</b></div>
     <h3>{question.prompt}</h3>
     {question.kind === 'order' && <p className="order-hint">Нажимай на события в нужной последовательности. Нажми повторно, чтобы убрать.</p>}
-    <div className="answer-list">
+    {(question.kind === 'single' || question.kind === 'multiple' || question.kind === 'order') && <div className="answer-list">
       {question.kind === 'order'
         ? question.options.map((option) => {
           const selected = order.includes(option.id);
@@ -220,15 +258,19 @@ function QuestionCard({ question, solved, onCorrect }: { question: Question; sol
             <span className="answer-marker">{question.kind === 'multiple' && selected ? '✓' : ''}</span>{option}
           </button>;
         })}
-    </div>
-    {result && <div className={`feedback ${result}`}><strong>{result === 'correct' ? (solved ? 'Уже выполнено' : `Верно · +${question.points} очков`) : 'Пока не так'}</strong><p>{result === 'correct' ? question.explanation : 'Вернись к странице учебника и попробуй ещё раз — очки не списываются.'}</p></div>}
-    {!solved && <button className="check-button" disabled={!canCheck} onClick={check}>{result === 'wrong' ? 'Попробовать ещё раз' : 'Проверить'}</button>}
+    </div>}
+    {question.kind === 'number' && <input className="number-answer" inputMode="numeric" value={answerText} onChange={(event) => setAnswerText(event.target.value)} placeholder="Введи число" />}
+    {question.kind === 'self-check' && <><textarea className="free-answer" value={answerText} onChange={(event) => setAnswerText(event.target.value)} placeholder="Напиши свой ответ" rows={5} />{selfCheckVisible && <div className="self-check"><strong>Проверь, есть ли в ответе:</strong><ul>{question.checklist.map((item) => <li key={item}>{item}</li>)}</ul></div>}</>}
+    {result && question.kind !== 'self-check' && <div className={`feedback ${result}`}><strong>{result === 'correct' ? (solved ? 'Уже выполнено' : `Верно · +${question.points} очков`) : 'Пока не так'}</strong><p>{result === 'correct' ? question.explanation : 'Проверь ответ и попробуй ещё раз — очки не списываются.'}</p></div>}
+    {!solved && question.kind !== 'self-check' && <button className="check-button" disabled={!canCheck} onClick={check}>{result === 'wrong' ? 'Попробовать ещё раз' : 'Проверить'}</button>}
+    {!solved && question.kind === 'self-check' && (selfCheckVisible ? <button className="check-button" onClick={() => { setResult('correct'); onCorrect(); }}>Я сверил(а) ответ · +{question.points}</button> : <button className="check-button" disabled={!canCheck} onClick={check}>Показать чек-лист</button>)}
+    {solved && question.kind === 'self-check' && <div className="feedback correct"><strong>Уже выполнено</strong><p>Самопроверка отмечена.</p></div>}
   </article>;
 }
 
 function SettingsScreen({ profile, onSave, onBack }: { profile: Profile; onSave: (profile: Profile) => void; onBack: () => void }) {
   const [draft, setDraft] = useState(profile);
-  const earnedPoints = activeParagraph.questions.filter((q) => profile.earnedQuestionIds.includes(q.id)).reduce((sum, q) => sum + q.points, 0);
+  const earnedPoints = [...activeParagraph.questions, ...controlWork1.variants.flatMap((variant) => variant.questions)].filter((q) => profile.earnedQuestionIds.includes(q.id)).reduce((sum, q) => sum + q.points, 0);
   const studySavings = Math.floor(earnedPoints / 500) * 500;
   const submit = (event: FormEvent) => { event.preventDefault(); onSave({ ...profile, ...draft, goalAmount: Math.max(0, draft.goalAmount), externalSavings: Math.max(0, draft.externalSavings) }); onBack(); };
   return <main className="settings-shell"><header className="detail-header"><button className="back-button" onClick={onBack}>←</button><span>Цель и накопления</span><span /></header><form className="settings-form" onSubmit={submit}><p className="lead">Настройки хранятся только на этом устройстве.</p><label>Название цели<input value={draft.goalName} onChange={(e) => setDraft({ ...draft, goalName: e.target.value })} /></label><label>Сумма цели, ₽<input inputMode="numeric" type="number" min="0" value={draft.goalAmount} onChange={(e) => setDraft({ ...draft, goalAmount: Number(e.target.value) })} /></label><label>Уже накоплено из других источников, ₽<input inputMode="numeric" type="number" min="0" value={draft.externalSavings} onChange={(e) => setDraft({ ...draft, externalSavings: Number(e.target.value) })} /></label><section className="study-savings"><span>Заработано учёбой</span><strong>{formatMoney(studySavings)}</strong><small>500 очков = 500 ₽. Повторное выполнение не приносит новых очков.</small></section><button className="primary-button" type="submit">Сохранить</button></form></main>;
