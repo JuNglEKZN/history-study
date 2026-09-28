@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { activeParagraph, history6, type Question } from './data/history6';
 
 type Tab = 'today' | 'topics' | 'timeline';
-type View = 'tabs' | 'paragraph' | 'book' | 'settings';
+type View = 'tabs' | 'paragraph' | 'settings';
 
 type Profile = {
   goalName: string;
@@ -27,14 +27,6 @@ function loadProfile(): Profile {
   }
 }
 
-function SourceLink({ page, onOpen }: { page: number; onOpen: (page: number) => void }) {
-  return (
-    <button className="source-link" onClick={() => onOpen(page)}>
-      <span aria-hidden="true">▧</span> Учебник · стр. {page}
-    </button>
-  );
-}
-
 function ProgressBar({ value }: { value: number }) {
   return <div className="progress-track"><div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} /></div>;
 }
@@ -46,7 +38,6 @@ function formatMoney(value: number) {
 function App() {
   const [tab, setTab] = useState<Tab>('today');
   const [view, setView] = useState<View>('tabs');
-  const [bookPage, setBookPage] = useState(39);
   const [profile, setProfile] = useState<Profile>(loadProfile);
 
   useEffect(() => {
@@ -61,11 +52,6 @@ function App() {
   const goalProgress = profile.goalAmount > 0 ? (totalSavings / profile.goalAmount) * 100 : 0;
   const completedQuestions = profile.earnedQuestionIds.length;
 
-  const openBook = (page: number) => {
-    setBookPage(page);
-    setView('book');
-  };
-
   const award = (question: Question) => {
     setProfile((current) => current.earnedQuestionIds.includes(question.id)
       ? current
@@ -73,10 +59,7 @@ function App() {
   };
 
   if (view === 'paragraph') {
-    return <ParagraphScreen onBack={() => setView('tabs')} onOpenBook={openBook} profile={profile} award={award} />;
-  }
-  if (view === 'book') {
-    return <BookScreen page={bookPage} onBack={() => setView('paragraph')} onPageChange={setBookPage} />;
+    return <ParagraphScreen onBack={() => setView('tabs')} profile={profile} award={award} />;
   }
   if (view === 'settings') {
     return <SettingsScreen profile={profile} onSave={setProfile} onBack={() => setView('tabs')} />;
@@ -107,7 +90,7 @@ function App() {
         />
       )}
       {tab === 'topics' && <TopicsScreen onOpen={() => setView('paragraph')} />}
-      {tab === 'timeline' && <TimelineScreen onOpenBook={openBook} onOpenParagraph={() => setView('paragraph')} />}
+      {tab === 'timeline' && <TimelineScreen onOpenParagraph={() => setView('paragraph')} />}
 
       <nav className="tab-bar" aria-label="Основная навигация">
         <button className={tab === 'today' ? 'active' : ''} onClick={() => setTab('today')}><span>◷</span>Сегодня</button>
@@ -151,53 +134,51 @@ function TodayScreen({ goalName, goalAmount, goalProgress, totalSavings, earnedP
 
 function TopicsScreen({ onOpen }: { onOpen: () => void }) {
   return <section className="screen-content">
-    <p className="lead">Учебник остаётся первоисточником: у каждого тезиса и задания есть ссылка на нужную страницу.</p>
+    <p className="lead">Материалы собраны по тематическим конспектам и тестам для 6 класса.</p>
     {history6.chapters.map((chapter) => <section className="chapter-card" key={chapter.id}>
       <div className="chapter-heading"><span>{chapter.title}</span><strong>{chapter.subtitle}</strong></div>
       {chapter.paragraphs.map((paragraph) => <button className="topic-row" key={paragraph.id} onClick={onOpen}>
         <div className="topic-index">{paragraph.number}</div>
-        <div><strong>{paragraph.title}</strong><small>Учебник · стр. {paragraph.pages[0]}–{paragraph.pages.at(-1)}</small></div>
+        <div><strong>{paragraph.title}</strong><small>{paragraph.questions.length} заданий · 6 класс</small></div>
         <span className="chevron">›</span>
       </button>)}
     </section>) }
-    <section className="source-notice"><span>▧</span><div><strong>Контент отделён от интерфейса</strong><p>Следующие темы добавляются из учебника отдельными наборами данных.</p></div></section>
+    <section className="source-notice"><span>✓</span><div><strong>Контент отделён от интерфейса</strong><p>Следующие темы добавляются отдельными наборами данных без изменения приложения.</p></div></section>
   </section>;
 }
 
-function TimelineScreen({ onOpenBook, onOpenParagraph }: { onOpenBook: (page: number) => void; onOpenParagraph: () => void }) {
+function TimelineScreen({ onOpenParagraph }: { onOpenParagraph: () => void }) {
   return <section className="screen-content timeline-screen">
     <p className="lead">Значимые даты только из уже добавленных страниц учебника.</p>
     <div className="timeline-line">
       {activeParagraph.timeline.map((event, index) => <article className="event-card" key={event.year}>
         <div className="event-dot" /><span className="event-year">{event.year}</span><p>{event.text}</p>
-        <div className="event-actions"><button onClick={onOpenParagraph}>§ 4</button><SourceLink page={event.source.page} onOpen={onOpenBook} /></div>
+        <div className="event-actions"><button onClick={onOpenParagraph}>Открыть § 4</button></div>
         {index < activeParagraph.timeline.length - 1 && <div className="event-connector" />}
       </article>)}
     </div>
   </section>;
 }
 
-function ParagraphScreen({ onBack, onOpenBook, profile, award }: { onBack: () => void; onOpenBook: (page: number) => void; profile: Profile; award: (question: Question) => void }) {
+function ParagraphScreen({ onBack, profile, award }: { onBack: () => void; profile: Profile; award: (question: Question) => void }) {
   return <main className="detail-shell">
-    <header className="detail-header"><button onClick={onBack} className="back-button">←</button><span>Тема</span><button onClick={() => onOpenBook(39)} className="book-icon" aria-label="Открыть учебник">▧</button></header>
+    <header className="detail-header"><button onClick={onBack} className="back-button">←</button><span>Тема</span><span className="header-placeholder" /></header>
     <section className="detail-content">
       <p className="chapter-label">{history6.chapters[0].title}</p>
       <h1>§ {activeParagraph.number}. {activeParagraph.title}</h1>
       <p className="question-banner">{activeParagraph.introQuestion}</p>
-      <SourceLink page={39} onOpen={onOpenBook} />
 
-      <section className="section-block"><h2>Главное</h2>{activeParagraph.keyIdeas.map((idea) => <article className="idea" key={idea.text}><p>{idea.text}</p><SourceLink page={idea.source.page} onOpen={onOpenBook} /></article>)}</section>
+      <section className="section-block"><h2>Главное</h2>{activeParagraph.keyIdeas.map((idea) => <article className="idea" key={idea.text}><p>{idea.text}</p></article>)}</section>
 
-      <section className="section-block"><h2>Запомни</h2><div className="term-grid">{activeParagraph.terms.map((term) => <article className="term-card" key={term.name}><strong>{term.name}</strong><p>{term.text}</p><SourceLink page={term.source.page} onOpen={onOpenBook} /></article>)}</div></section>
+      <section className="section-block"><h2>Запомни</h2><div className="term-grid">{activeParagraph.terms.map((term) => <article className="term-card" key={term.name}><strong>{term.name}</strong><p>{term.text}</p></article>)}</div></section>
 
-      <section className="section-block"><div className="section-title-row"><h2>Проверь себя</h2><span className="points-badge">+30 очков</span></div><p className="muted">Часть ответов находится только в учебнике.</p>{activeParagraph.questions.map((question) => <QuestionCard key={question.id} question={question} solved={profile.earnedQuestionIds.includes(question.id)} onCorrect={() => award(question)} onOpenBook={onOpenBook} />)}</section>
+      <section className="section-block"><div className="section-title-row"><h2>Проверь себя</h2><span className="points-badge">+50 очков</span></div><p className="muted">Вопросы помогают закрепить главное после изучения темы.</p>{activeParagraph.questions.map((question) => <QuestionCard key={question.id} question={question} solved={profile.earnedQuestionIds.includes(question.id)} onCorrect={() => award(question)} />)}</section>
 
-      <section className="source-callout"><span>▧</span><div><strong>Оригинальные страницы</strong><p>Сканы стр. 39–48 доступны внутри приложения.</p></div><button onClick={() => onOpenBook(39)}>Открыть</button></section>
     </section>
   </main>;
 }
 
-function QuestionCard({ question, solved, onCorrect, onOpenBook }: { question: Question; solved: boolean; onCorrect: () => void; onOpenBook: (page: number) => void }) {
+function QuestionCard({ question, solved, onCorrect }: { question: Question; solved: boolean; onCorrect: () => void }) {
   const [selection, setSelection] = useState<number[]>([]);
   const [order, setOrder] = useState<string[]>([]);
   const [result, setResult] = useState<'correct' | 'wrong' | null>(solved ? 'correct' : null);
@@ -223,7 +204,6 @@ function QuestionCard({ question, solved, onCorrect, onOpenBook }: { question: Q
   return <article className={`question-card ${result ?? ''}`}>
     <div className="question-top"><span>{question.title}</span><b>+{question.points}</b></div>
     <h3>{question.prompt}</h3>
-    <SourceLink page={question.source.page} onOpen={onOpenBook} />
     {question.kind === 'order' && <p className="order-hint">Нажимай на события в нужной последовательности. Нажми повторно, чтобы убрать.</p>}
     <div className="answer-list">
       {question.kind === 'order'
@@ -244,11 +224,6 @@ function QuestionCard({ question, solved, onCorrect, onOpenBook }: { question: Q
     {result && <div className={`feedback ${result}`}><strong>{result === 'correct' ? (solved ? 'Уже выполнено' : `Верно · +${question.points} очков`) : 'Пока не так'}</strong><p>{result === 'correct' ? question.explanation : 'Вернись к странице учебника и попробуй ещё раз — очки не списываются.'}</p></div>}
     {!solved && <button className="check-button" disabled={!canCheck} onClick={check}>{result === 'wrong' ? 'Попробовать ещё раз' : 'Проверить'}</button>}
   </article>;
-}
-
-function BookScreen({ page, onBack, onPageChange }: { page: number; onBack: () => void; onPageChange: (page: number) => void }) {
-  const min = 39; const max = 48; const safePage = Math.min(max, Math.max(min, page));
-  return <main className="book-shell"><header className="book-header"><button className="back-button" onClick={onBack}>←</button><div><strong>Учебник</strong><span>§ 4 · Европа в IX—XI вв.</span></div><span className="book-page-count">{safePage} / {max}</span></header><div className="scan-wrap"><img src={`/textbook-pages/history-6/page-${safePage}.jpeg`} alt={`Скан страницы ${safePage} учебника истории`} /></div><footer className="book-controls"><button onClick={() => onPageChange(safePage - 1)} disabled={safePage === min}>← {safePage - 1}</button><strong>стр. {safePage}</strong><button onClick={() => onPageChange(safePage + 1)} disabled={safePage === max}>{safePage + 1} →</button></footer></main>;
 }
 
 function SettingsScreen({ profile, onSave, onBack }: { profile: Profile; onSave: (profile: Profile) => void; onBack: () => void }) {
