@@ -142,7 +142,7 @@ function TodayScreen({ goalName, goalAmount, goalProgress, totalSavings, earnedP
     </button>
 
     <section className="hero-card">
-      <span className="chapter-label">{chapter.title} · {chapter.subtitle}</span>
+      <span className="chapter-label">Глава {chapter.number} · {chapter.title}</span>
       <p className="paragraph-number">§ {paragraph.number}</p>
       <h2>{paragraph.title}</h2>
       <p>{paragraph.introQuestion}</p>
