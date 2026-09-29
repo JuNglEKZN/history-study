@@ -186,16 +186,59 @@ function TopicsScreen({ onOpen }: { onOpen: (paragraphId: string) => void }) {
 }
 
 function TimelineScreen({ onOpenParagraph }: { onOpenParagraph: (paragraphId: string) => void }) {
-  const timelineEvents = paragraphs
-    .flatMap((paragraph) => paragraph.timeline.map((event) => ({ event, paragraph })))
+  // Одна историческая запись может встречаться в нескольких параграфах.
+  // Объединяем только заранее подтверждённые смысловые дубли; одинаковый год сам по себе
+  // не считается дублем, потому что в один год могли произойти разные события.
+  const duplicateEventIds: Record<string, string> = {
+    'from-antiquity:476': 'fall-western-rome-476',
+    'europe-9-11:476': 'fall-western-rome-476',
+    'islam-birth:622': 'hijra-622',
+    'europe-9-11:622': 'hijra-622',
+    'franks:732': 'poitiers-732',
+    'europe-9-11:732': 'poitiers-732',
+    'franks:800': 'charlemagne-emperor-800',
+    'europe-9-11:800': 'charlemagne-emperor-800',
+    'franks:843': 'verdun-843',
+    'europe-9-11:843': 'verdun-843',
+  };
+
+  const preferredEventText: Record<string, string> = {
+    'fall-western-rome-476': 'Падение Западной Римской империи — условная граница Античности и Средневековья.',
+    'hijra-622': 'Хиджра: переселение Мухаммеда из Мекки в Медину, начало мусульманского летоисчисления.',
+    'poitiers-732': 'Битва при Пуатье: Карл Мартелл победил арабов, остановив их продвижение в Западную Европу.',
+    'charlemagne-emperor-800': 'Карл Великий коронован императором.',
+    'verdun-843': 'Верденский раздел империи Карла Великого.',
+  };
+
+  const grouped = new Map<string, { event: typeof paragraphs[number]['timeline'][number]; paragraphs: typeof paragraphs }>();
+
+  paragraphs.forEach((paragraph) => {
+    paragraph.timeline.forEach((event) => {
+      const eventId = duplicateEventIds[`${paragraph.id}:${event.year}`] ?? `${paragraph.id}:${event.year}:${event.text}`;
+      const existing = grouped.get(eventId);
+      if (existing) {
+        existing.paragraphs.push(paragraph);
+      } else {
+        grouped.set(eventId, {
+          event: { ...event, text: preferredEventText[eventId] ?? event.text },
+          paragraphs: [paragraph],
+        });
+      }
+    });
+  });
+
+  const timelineEvents = [...grouped.entries()]
+    .map(([id, value]) => ({ id, ...value }))
     .sort((left, right) => timelineYearStart(left.event.year) - timelineYearStart(right.event.year));
 
   return <section className="screen-content timeline-screen">
     <p className="lead">Ключевые даты тем, которые уже есть в приложении.</p>
     <div className="timeline-line">
-      {timelineEvents.map(({ event, paragraph }, index) => <article className="event-card" key={`${paragraph.id}-${event.year}`}>
+      {timelineEvents.map(({ id, event, paragraphs: linkedParagraphs }, index) => <article className="event-card" key={id}>
         <div className="event-dot" /><span className="event-year">{event.year}</span><p>{event.text}</p>
-        <div className="event-actions"><button onClick={() => onOpenParagraph(paragraph.id)}>Открыть § {paragraph.number}</button></div>
+        <div className="event-actions">
+          {linkedParagraphs.map((paragraph) => <button key={paragraph.id} onClick={() => onOpenParagraph(paragraph.id)}>Открыть § {paragraph.number}</button>)}
+        </div>
         {index < timelineEvents.length - 1 && <div className="event-connector" />}
       </article>)}
     </div>
