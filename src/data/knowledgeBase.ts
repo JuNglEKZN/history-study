@@ -56,8 +56,8 @@ export const knowledgeBase: { chapters: readonly ChapterRecord[] } = {
     },
     {
       id: 'chapter-2', number: 2, title: 'Мусульманская цивилизация в VII—XI вв.', lessons: [
-        { id: 'rise-of-islam', number: 5, title: 'Возникновение ислама и государства у арабов', textbookPages: [53, 61], state: 'indexed' },
-        { id: 'arab-caliphate', number: 6, title: 'Арабский халифат, его расцвет и распад', textbookPages: [62, 71], state: 'indexed' },
+        { id: 'rise-of-islam', number: 5, title: 'Возникновение ислама и государства у арабов', textbookPages: [53, 61], state: 'ready' },
+        { id: 'arab-caliphate', number: 6, title: 'Арабский халифат, его расцвет и распад', textbookPages: [62, 71], state: 'ready' },
       ],
     },
     {
