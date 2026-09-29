@@ -1,6 +1,7 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { activeParagraph, history6, type Question } from './data/history6';
+import { FormEvent, useEffect, useState } from 'react';
+import { activeParagraph, history6, paragraphs, type Question } from './data/history6';
 import { controlWork1 } from './data/controlWork1';
+import { knowledgeBase } from './data/knowledgeBase';
 
 type Tab = 'today' | 'topics' | 'timeline';
 type View = 'tabs' | 'paragraph' | 'control' | 'settings';
@@ -40,19 +41,25 @@ function App() {
   const [tab, setTab] = useState<Tab>('today');
   const [view, setView] = useState<View>('tabs');
   const [profile, setProfile] = useState<Profile>(loadProfile);
+  const [selectedParagraphId, setSelectedParagraphId] = useState('lords-and-vassals');
+  const selectedParagraph = paragraphs.find((paragraph) => paragraph.id === selectedParagraphId) ?? activeParagraph;
+  const selectedChapter = knowledgeBase.chapters.find((chapter) => chapter.lessons.some((lesson) => lesson.id === selectedParagraph.id)) ?? knowledgeBase.chapters[0];
 
   useEffect(() => {
     localStorage.setItem('history-study-profile', JSON.stringify(profile));
   }, [profile]);
 
-  const allQuestions = [...activeParagraph.questions, ...controlWork1.variants.flatMap((variant) => variant.questions)];
+  const allQuestions = [...paragraphs.flatMap((paragraph) => paragraph.questions), ...controlWork1.variants.flatMap((variant) => variant.questions)];
   const earnedPoints = allQuestions
     .filter((question) => profile.earnedQuestionIds.includes(question.id))
     .reduce((total, question) => total + question.points, 0);
   const studySavings = Math.floor(earnedPoints / 500) * 500;
   const totalSavings = profile.externalSavings + studySavings;
   const goalProgress = profile.goalAmount > 0 ? (totalSavings / profile.goalAmount) * 100 : 0;
-  const completedQuestions = activeParagraph.questions.filter((question) => profile.earnedQuestionIds.includes(question.id)).length;
+  const completedQuestions = selectedParagraph.questions.filter((question) => profile.earnedQuestionIds.includes(question.id)).length;
+  const remainingPoints = selectedParagraph.questions
+    .filter((question) => !profile.earnedQuestionIds.includes(question.id))
+    .reduce((sum, question) => sum + question.points, 0);
 
   const award = (question: Question) => {
     setProfile((current) => current.earnedQuestionIds.includes(question.id)
@@ -61,7 +68,7 @@ function App() {
   };
 
   if (view === 'paragraph') {
-    return <ParagraphScreen onBack={() => setView('tabs')} profile={profile} award={award} />;
+    return <ParagraphScreen paragraph={selectedParagraph} onBack={() => setView('tabs')} profile={profile} award={award} />;
   }
   if (view === 'control') {
     return <ControlWorkScreen onBack={() => setView('tabs')} profile={profile} award={award} />;
@@ -90,13 +97,16 @@ function App() {
           totalSavings={totalSavings}
           earnedPoints={earnedPoints}
           completedQuestions={completedQuestions}
+          remainingPoints={remainingPoints}
+          paragraph={selectedParagraph}
+          chapter={selectedChapter}
           onContinue={() => setView('paragraph')}
           onSettings={() => setView('settings')}
           onControl={() => setView('control')}
         />
       )}
-      {tab === 'topics' && <TopicsScreen onOpen={() => setView('paragraph')} />}
-      {tab === 'timeline' && <TimelineScreen onOpenParagraph={() => setView('paragraph')} />}
+      {tab === 'topics' && <TopicsScreen onOpen={(paragraphId) => { setSelectedParagraphId(paragraphId); setView('paragraph'); }} />}
+      {tab === 'timeline' && <TimelineScreen onOpenParagraph={(paragraphId) => { setSelectedParagraphId(paragraphId); setView('paragraph'); }} />}
 
       <nav className="tab-bar" aria-label="Основная навигация">
         <button className={tab === 'today' ? 'active' : ''} onClick={() => setTab('today')}><span>◷</span>Сегодня</button>
@@ -107,10 +117,10 @@ function App() {
   );
 }
 
-function TodayScreen({ goalName, goalAmount, goalProgress, totalSavings, earnedPoints, completedQuestions, onContinue, onSettings, onControl }: {
-  goalName: string; goalAmount: number; goalProgress: number; totalSavings: number; earnedPoints: number; completedQuestions: number; onContinue: () => void; onSettings: () => void; onControl: () => void;
+function TodayScreen({ goalName, goalAmount, goalProgress, totalSavings, earnedPoints, completedQuestions, remainingPoints, paragraph, chapter, onContinue, onSettings, onControl }: {
+  goalName: string; goalAmount: number; goalProgress: number; totalSavings: number; earnedPoints: number; completedQuestions: number; remainingPoints: number; paragraph: typeof activeParagraph; chapter: typeof knowledgeBase.chapters[number]; onContinue: () => void; onSettings: () => void; onControl: () => void;
 }) {
-  const remaining = activeParagraph.questions.length - completedQuestions;
+  const remaining = paragraph.questions.length - completedQuestions;
   return <section className="screen-content">
     <button className="savings-card" onClick={onSettings}>
       <div><span className="overline">{goalName}</span><strong>{formatMoney(totalSavings)}</strong><span className="muted">из {formatMoney(goalAmount)}</span></div>
@@ -118,15 +128,15 @@ function TodayScreen({ goalName, goalAmount, goalProgress, totalSavings, earnedP
     </button>
 
     <section className="hero-card">
-      <span className="chapter-label">{history6.chapters[0].title} · {history6.chapters[0].subtitle}</span>
-      <p className="paragraph-number">§ {activeParagraph.number}</p>
-      <h2>{activeParagraph.title}</h2>
-      <p>{activeParagraph.introQuestion}</p>
-      <div className="hero-art" aria-hidden="true"><span>IX</span><i>→</i><span>XI</span></div>
+      <span className="chapter-label">{chapter.title} · {chapter.subtitle}</span>
+      <p className="paragraph-number">§ {paragraph.number}</p>
+      <h2>{paragraph.title}</h2>
+      <p>{paragraph.introQuestion}</p>
+      <div className="hero-art" aria-hidden="true"><span>VIII</span><i>→</i><span>XI</span></div>
       <button className="primary-button" onClick={onContinue}>
         {completedQuestions ? 'Продолжить тему' : 'Начать тему'} <span>→</span>
       </button>
-      <span className="hint">{remaining ? `${remaining} задания · до +${activeParagraph.questions.slice(completedQuestions).reduce((sum, q) => sum + q.points, 0)} очков` : 'Все задания выполнены'}</span>
+      <span className="hint">{remaining ? `${remaining} заданий · до +${remainingPoints} очков` : 'Все задания выполнены'}</span>
     </section>
 
     <section className="small-card">
@@ -143,47 +153,50 @@ function TodayScreen({ goalName, goalAmount, goalProgress, totalSavings, earnedP
   </section>;
 }
 
-function TopicsScreen({ onOpen }: { onOpen: () => void }) {
+function TopicsScreen({ onOpen }: { onOpen: (paragraphId: string) => void }) {
   return <section className="screen-content">
-    <p className="lead">Материалы собраны по тематическим конспектам и тестам для 6 класса.</p>
-    {history6.chapters.map((chapter) => <section className="chapter-card" key={chapter.id}>
-      <div className="chapter-heading"><span>{chapter.title}</span><strong>{chapter.subtitle}</strong></div>
-      {chapter.paragraphs.map((paragraph) => <button className="topic-row" key={paragraph.id} onClick={onOpen}>
+    <p className="lead">Все 24 параграфа курса уже собраны в структуру. Открыты темы, для которых проверены объяснение и задания.</p>
+    {knowledgeBase.chapters.map((chapter) => <section className="chapter-card" key={chapter.id}>
+      <div className="chapter-heading"><span>Глава {chapter.number}</span><strong>{chapter.title}</strong></div>
+      {chapter.lessons.map((paragraph) => {
+        const questionCount = paragraphs.find((item) => item.id === paragraph.id)?.questions.length;
+        return <button className={`topic-row ${paragraph.state === 'indexed' ? 'is-coming' : ''}`} key={paragraph.id} onClick={() => onOpen(paragraph.id)} disabled={paragraph.state === 'indexed'}>
         <div className="topic-index">{paragraph.number}</div>
-        <div><strong>{paragraph.title}</strong><small>{paragraph.questions.length} заданий · 6 класс</small></div>
-        <span className="chevron">›</span>
-      </button>)}
+        <div><strong>{paragraph.title}</strong><small>{paragraph.state === 'ready' ? `${questionCount} заданий · 6 класс` : `Учебник: с. ${paragraph.textbookPages[0]}–${paragraph.textbookPages[1]}`}</small></div>
+        <span className="chevron">{paragraph.state === 'ready' ? '›' : '·'}</span>
+      </button>;
+      })}
     </section>) }
-    <section className="source-notice"><span>✓</span><div><strong>Контент отделён от интерфейса</strong><p>Следующие темы добавляются отдельными наборами данных без изменения приложения.</p></div></section>
+    <section className="source-notice"><span>✓</span><div><strong>Учебный материал — отдельно</strong><p>Новые темы можно добавлять в данные курса, не меняя экран приложения.</p></div></section>
   </section>;
 }
 
-function TimelineScreen({ onOpenParagraph }: { onOpenParagraph: () => void }) {
+function TimelineScreen({ onOpenParagraph }: { onOpenParagraph: (paragraphId: string) => void }) {
   return <section className="screen-content timeline-screen">
-    <p className="lead">Значимые даты только из уже добавленных страниц учебника.</p>
+    <p className="lead">Ключевые даты тем, которые уже есть в приложении.</p>
     <div className="timeline-line">
-      {activeParagraph.timeline.map((event, index) => <article className="event-card" key={event.year}>
+      {paragraphs.flatMap((paragraph) => paragraph.timeline.map((event) => ({ event, paragraph }))).map(({ event, paragraph }, index, events) => <article className="event-card" key={`${paragraph.id}-${event.year}`}>
         <div className="event-dot" /><span className="event-year">{event.year}</span><p>{event.text}</p>
-        <div className="event-actions"><button onClick={onOpenParagraph}>Открыть § 4</button></div>
-        {index < activeParagraph.timeline.length - 1 && <div className="event-connector" />}
+        <div className="event-actions"><button onClick={() => onOpenParagraph(paragraph.id)}>Открыть § {paragraph.number}</button></div>
+        {index < events.length - 1 && <div className="event-connector" />}
       </article>)}
     </div>
   </section>;
 }
 
-function ParagraphScreen({ onBack, profile, award }: { onBack: () => void; profile: Profile; award: (question: Question) => void }) {
+function ParagraphScreen({ paragraph, onBack, profile, award }: { paragraph: typeof activeParagraph; onBack: () => void; profile: Profile; award: (question: Question) => void }) {
   return <main className="detail-shell">
     <header className="detail-header"><button onClick={onBack} className="back-button">←</button><span>Тема</span><span className="header-placeholder" /></header>
     <section className="detail-content">
-      <p className="chapter-label">{history6.chapters[0].title}</p>
-      <h1>§ {activeParagraph.number}. {activeParagraph.title}</h1>
-      <p className="question-banner">{activeParagraph.introQuestion}</p>
+      <p className="chapter-label">{knowledgeBase.chapters.find((chapter) => chapter.lessons.some((lesson) => lesson.id === paragraph.id))?.title}</p>
+      <h1>§ {paragraph.number}. {paragraph.title}</h1>
+      <p className="question-banner">{paragraph.introQuestion}</p>
 
-      <section className="section-block"><h2>Главное</h2>{activeParagraph.keyIdeas.map((idea) => <article className="idea" key={idea.text}><p>{idea.text}</p></article>)}</section>
+      <section className="section-block"><h2>Главное</h2>{paragraph.keyIdeas.map((idea) => <article className="idea" key={idea.text}><p>{idea.text}</p></article>)}</section>
 
-      <section className="section-block"><h2>Запомни</h2><div className="term-grid">{activeParagraph.terms.map((term) => <article className="term-card" key={term.name}><strong>{term.name}</strong><p>{term.text}</p></article>)}</div></section>
+      <section className="section-block"><h2>Запомни</h2><div className="term-grid">{paragraph.terms.map((term) => <article className="term-card" key={term.name}><strong>{term.name}</strong><p>{term.text}</p></article>)}</div></section>
 
-      <section className="section-block"><div className="section-title-row"><h2>Проверь себя</h2><span className="points-badge">+50 очков</span></div><p className="muted">Вопросы помогают закрепить главное после изучения темы.</p>{activeParagraph.questions.map((question) => <QuestionCard key={question.id} question={question} solved={profile.earnedQuestionIds.includes(question.id)} onCorrect={() => award(question)} />)}</section>
+      <section className="section-block"><div className="section-title-row"><h2>Проверь себя</h2><span className="points-badge">+{paragraph.questions.reduce((sum, question) => sum + question.points, 0)} очков</span></div><p className="muted">Вопросы помогают закрепить главное после изучения темы.</p>{paragraph.questions.map((question) => <QuestionCard key={question.id} question={question} solved={profile.earnedQuestionIds.includes(question.id)} onCorrect={() => award(question)} />)}</section>
 
     </section>
   </main>;
@@ -270,7 +283,7 @@ function QuestionCard({ question, solved, onCorrect }: { question: Question; sol
 
 function SettingsScreen({ profile, onSave, onBack }: { profile: Profile; onSave: (profile: Profile) => void; onBack: () => void }) {
   const [draft, setDraft] = useState(profile);
-  const earnedPoints = [...activeParagraph.questions, ...controlWork1.variants.flatMap((variant) => variant.questions)].filter((q) => profile.earnedQuestionIds.includes(q.id)).reduce((sum, q) => sum + q.points, 0);
+  const earnedPoints = [...paragraphs.flatMap((paragraph) => paragraph.questions), ...controlWork1.variants.flatMap((variant) => variant.questions)].filter((q) => profile.earnedQuestionIds.includes(q.id)).reduce((sum, q) => sum + q.points, 0);
   const studySavings = Math.floor(earnedPoints / 500) * 500;
   const submit = (event: FormEvent) => { event.preventDefault(); onSave({ ...profile, ...draft, goalAmount: Math.max(0, draft.goalAmount), externalSavings: Math.max(0, draft.externalSavings) }); onBack(); };
   return <main className="settings-shell"><header className="detail-header"><button className="back-button" onClick={onBack}>←</button><span>Цель и накопления</span><span /></header><form className="settings-form" onSubmit={submit}><p className="lead">Настройки хранятся только на этом устройстве.</p><label>Название цели<input value={draft.goalName} onChange={(e) => setDraft({ ...draft, goalName: e.target.value })} /></label><label>Сумма цели, ₽<input inputMode="numeric" type="number" min="0" value={draft.goalAmount} onChange={(e) => setDraft({ ...draft, goalAmount: Number(e.target.value) })} /></label><label>Уже накоплено из других источников, ₽<input inputMode="numeric" type="number" min="0" value={draft.externalSavings} onChange={(e) => setDraft({ ...draft, externalSavings: Number(e.target.value) })} /></label><section className="study-savings"><span>Заработано учёбой</span><strong>{formatMoney(studySavings)}</strong><small>500 очков = 500 ₽. Повторное выполнение не приносит новых очков.</small></section><button className="primary-button" type="submit">Сохранить</button></form></main>;
