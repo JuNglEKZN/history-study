@@ -1,5 +1,15 @@
 # History Study
 
+## Запуск в Telegram
+
+После первой публикации GitHub Pages приложение будет доступно по адресу
+`https://junglekzn.github.io/history-study/`.
+
+В `@BotFather` откройте `@historystudymariabot` → **Bot Settings** →
+**Configure Mini App** и укажите этот адрес. Затем в **Menu Button** задайте
+текст кнопки «Учиться» и тот же URL. В настройках репозитория GitHub нужно
+один раз выбрать **Settings → Pages → Source: GitHub Actions**.
+
 Мобильное приложение для изучения всеобщей истории в 6 классе. Это не конструктор курсов: приложение собрано вокруг одного учебника и его 24 параграфов.
 
 ## База знаний
