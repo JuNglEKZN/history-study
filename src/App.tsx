@@ -186,16 +186,35 @@ function TopicsScreen({ onOpen }: { onOpen: (paragraphId: string) => void }) {
 }
 
 function TimelineScreen({ onOpenParagraph }: { onOpenParagraph: (paragraphId: string) => void }) {
+  const timelineEvents = paragraphs
+    .flatMap((paragraph) => paragraph.timeline.map((event) => ({ event, paragraph })))
+    .sort((left, right) => timelineYearStart(left.event.year) - timelineYearStart(right.event.year));
+
   return <section className="screen-content timeline-screen">
     <p className="lead">Ключевые даты тем, которые уже есть в приложении.</p>
     <div className="timeline-line">
-      {paragraphs.flatMap((paragraph) => paragraph.timeline.map((event) => ({ event, paragraph }))).map(({ event, paragraph }, index, events) => <article className="event-card" key={`${paragraph.id}-${event.year}`}>
+      {timelineEvents.map(({ event, paragraph }, index) => <article className="event-card" key={`${paragraph.id}-${event.year}`}>
         <div className="event-dot" /><span className="event-year">{event.year}</span><p>{event.text}</p>
         <div className="event-actions"><button onClick={() => onOpenParagraph(paragraph.id)}>Открыть § {paragraph.number}</button></div>
-        {index < events.length - 1 && <div className="event-connector" />}
+        {index < timelineEvents.length - 1 && <div className="event-connector" />}
       </article>)}
     </div>
   </section>;
+}
+
+function timelineYearStart(year: string) {
+  const numericYear = year.match(/\d{1,4}/);
+  if (numericYear) return Number(numericYear[0]);
+
+  const century = year.match(/\b([IVXLCDM]+)\s*в/i)?.[1];
+  if (!century) return Number.MAX_SAFE_INTEGER;
+
+  const romanValues: Record<string, number> = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+  return (century.toUpperCase().split('').reduce((total, symbol, index, symbols) => (
+    romanValues[symbol] < (romanValues[symbols[index + 1]] ?? 0)
+      ? total - romanValues[symbol]
+      : total + romanValues[symbol]
+  ), 0) - 1) * 100;
 }
 
 function ParagraphScreen({ paragraph, onBack, profile, award }: { paragraph: typeof activeParagraph; onBack: () => void; profile: Profile; award: (question: Question) => void }) {
