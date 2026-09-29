@@ -41,7 +41,7 @@ function App() {
   const [tab, setTab] = useState<Tab>('today');
   const [view, setView] = useState<View>('tabs');
   const [profile, setProfile] = useState<Profile>(loadProfile);
-  const [selectedParagraphId, setSelectedParagraphId] = useState('lords-and-vassals');
+  const [selectedParagraphId, setSelectedParagraphId] = useState('from-antiquity');
   const selectedParagraph = paragraphs.find((paragraph) => paragraph.id === selectedParagraphId) ?? activeParagraph;
   const selectedChapter = knowledgeBase.chapters.find((chapter) => chapter.lessons.some((lesson) => lesson.id === selectedParagraph.id)) ?? knowledgeBase.chapters[0];
 

@@ -48,7 +48,7 @@ export const knowledgeBase: { chapters: readonly ChapterRecord[] } = {
   chapters: [
     {
       id: 'chapter-1', number: 1, title: 'Европа в раннее Средневековье', lessons: [
-        { id: 'from-antiquity', number: 1, title: 'От Древности к Средневековью: Рим, варвары и христианская церковь', textbookPages: [8, 17], state: 'indexed' },
+        { id: 'from-antiquity', number: 1, title: 'От Древности к Средневековью: Рим, варвары и христианская церковь', textbookPages: [8, 17], state: 'ready' },
         { id: 'byzantium', number: 2, title: 'Византийская империя и её соседи', textbookPages: [18, 29], state: 'indexed' },
         { id: 'clovis-to-charlemagne', number: 3, title: 'От королевства Хлодвига к империи Карла Великого', textbookPages: [30, 39], state: 'indexed' },
         { id: 'europe-9-11', number: 4, title: 'Европа в IX—XI вв.', textbookPages: [40, 51], state: 'ready' },
