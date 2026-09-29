@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { activeParagraph, history6, paragraphs, type Question } from './data/history6';
 import { controlWork1 } from './data/controlWork1';
 import { knowledgeBase } from './data/knowledgeBase';
@@ -42,6 +42,7 @@ function App() {
   const [view, setView] = useState<View>('tabs');
   const [profile, setProfile] = useState<Profile>(loadProfile);
   const [selectedParagraphId, setSelectedParagraphId] = useState('from-antiquity');
+  const titleTapTimes = useRef<number[]>([]);
   const selectedParagraph = paragraphs.find((paragraph) => paragraph.id === selectedParagraphId) ?? activeParagraph;
   const selectedChapter = knowledgeBase.chapters.find((chapter) => chapter.lessons.some((lesson) => lesson.id === selectedParagraph.id)) ?? knowledgeBase.chapters[0];
 
@@ -67,6 +68,19 @@ function App() {
       : { ...current, earnedQuestionIds: [...current.earnedQuestionIds, question.id] });
   };
 
+  // Временный тестовый вход: семь быстрых нажатий на название курса.
+  // После появления профилей в Telegram этот сброс будет выполняться сервером
+  // только для тестового администратора.
+  const handleTestReset = () => {
+    const now = Date.now();
+    titleTapTimes.current = [...titleTapTimes.current, now].filter((time) => now - time < 2200);
+    if (titleTapTimes.current.length < 7) return;
+    titleTapTimes.current = [];
+    if (window.confirm('Сбросить только очки за задания? Цель и накопления останутся без изменений.')) {
+      setProfile((current) => ({ ...current, earnedQuestionIds: [] }));
+    }
+  };
+
   if (view === 'paragraph') {
     return <ParagraphScreen paragraph={selectedParagraph} onBack={() => setView('tabs')} profile={profile} award={award} />;
   }
@@ -81,7 +95,7 @@ function App() {
     <main className="app-shell">
       <header className="app-header">
         <div>
-          <p className="eyebrow">{history6.title}</p>
+          <button className="course-title-trigger" onClick={handleTestReset} aria-label="Название курса">{history6.title}</button>
           <h1>{tab === 'today' ? 'Сегодня' : tab === 'topics' ? 'Темы' : 'Шкала времени'}</h1>
         </div>
         <button className="goal-pill" onClick={() => setView('settings')} aria-label="Открыть цель и накопления">

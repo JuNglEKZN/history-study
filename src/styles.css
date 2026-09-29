@@ -1,4 +1,5 @@
 :root { color: #173d42; background: #eef8f8; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif; font-synthesis: none; }
+.course-title-trigger { display: block; margin: 0; padding: 0; border: 0; color: #65908d; background: transparent; font-size: 10px; font-weight: 750; letter-spacing: .1em; text-align: left; text-transform: uppercase; }
 * { box-sizing: border-box; } body { min-width: 320px; margin: 0; background: radial-gradient(circle at 8% 0%, #dff7f6 0, transparent 28rem), radial-gradient(circle at 96% 10%, #e3edff 0, transparent 30rem), #eef7f8; } button, input, textarea { font: inherit; } button { cursor: pointer; } button:disabled { cursor: default; }
 .app-shell, .detail-shell, .settings-shell { width: min(100%, 590px); min-height: 100dvh; margin: 0 auto; color: #173d42; background: linear-gradient(160deg, rgba(255,255,255,.88), rgba(239,251,250,.86)); }
 .app-shell { padding: max(32px, env(safe-area-inset-top)) 20px calc(112px + env(safe-area-inset-bottom)); }.detail-shell, .settings-shell { padding-bottom: max(25px, env(safe-area-inset-bottom)); }
