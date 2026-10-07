@@ -32,6 +32,7 @@ export type NumberQuestion = {
   correct: number;
   points: number;
   explanation: string;
+  source?: Source;
 };
 
 export type SelfCheckQuestion = {
@@ -41,6 +42,7 @@ export type SelfCheckQuestion = {
   prompt: string;
   checklist: string[];
   points: number;
+  source?: Source;
 };
 
 export type Question = ChoiceQuestion | OrderQuestion | NumberQuestion | SelfCheckQuestion;
