@@ -235,7 +235,7 @@ function TimelineScreen({ onOpenParagraph }: { onOpenParagraph: (paragraphId: st
     <p className="lead">Ключевые даты тем, которые уже есть в приложении.</p>
     <div className="timeline-line">
       {timelineEvents.map(({ id, event, paragraphs: linkedParagraphs }, index) => <article className="event-card" key={id}>
-        <div className="event-dot" /><span className="event-year">{event.year}</span><p>{event.text}</p>
+        <div className="event-dot" /><span className="event-year">{event.year}</span><p>{event.text}</p><small className="muted source-citation">Учебник · с. {event.source.page}</small>
         <div className="event-actions">
           {linkedParagraphs.map((paragraph) => <button key={paragraph.id} onClick={() => onOpenParagraph(paragraph.id)}>Открыть § {paragraph.number}</button>)}
         </div>
@@ -266,11 +266,11 @@ function ParagraphScreen({ paragraph, onBack, profile, award }: { paragraph: typ
     <section className="detail-content">
       <p className="chapter-label">{knowledgeBase.chapters.find((chapter) => chapter.lessons.some((lesson) => lesson.id === paragraph.id))?.title}</p>
       <h1>§ {paragraph.number}. {paragraph.title}</h1>
-      <p className="question-banner">{paragraph.introQuestion}</p>
+      <p className="question-banner">{paragraph.introQuestion}</p><small className="muted source-citation">Учебник · с. {paragraph.pages[0]}–{paragraph.pages[paragraph.pages.length - 1]}</small>
 
-      <section className="section-block"><h2>Главное</h2>{paragraph.keyIdeas.map((idea) => <article className="idea" key={idea.text}><p>{idea.text}</p></article>)}</section>
+      <section className="section-block"><h2>Главное</h2>{paragraph.keyIdeas.map((idea) => <article className="idea" key={idea.text}><p>{idea.text}</p><small className="muted source-citation">Учебник · с. {idea.source.page}</small></article>)}</section>
 
-      <section className="section-block"><h2>Запомни</h2><div className="term-grid">{paragraph.terms.map((term) => <article className="term-card" key={term.name}><strong>{term.name}</strong><p>{term.text}</p></article>)}</div></section>
+      <section className="section-block"><h2>Запомни</h2><div className="term-grid">{paragraph.terms.map((term) => <article className="term-card" key={term.name}><strong>{term.name}</strong><p>{term.text}</p><small className="muted source-citation">Учебник · с. {term.source.page}</small></article>)}</div></section>
 
       <section className="section-block"><div className="section-title-row"><h2>Проверь себя</h2><span className="points-badge">+{paragraph.questions.reduce((sum, question) => sum + question.points, 0)} очков</span></div><p className="muted">Вопросы помогают закрепить главное после изучения темы.</p>{paragraph.questions.map((question) => <QuestionCard key={question.id} question={question} solved={profile.earnedQuestionIds.includes(question.id)} onCorrect={() => award(question)} />)}</section>
 
@@ -330,7 +330,7 @@ function QuestionCard({ question, solved, onCorrect }: { question: Question; sol
 
   return <article className={`question-card ${result ?? ''}`}>
     <div className="question-top"><span>{question.title}</span><b>+{question.points}</b></div>
-    <h3>{question.prompt}</h3>
+    <h3>{question.prompt}</h3>{question.source && <small className="muted source-citation">Учебник · с. {question.source.page}</small>}
     {question.kind === 'order' && <p className="order-hint">Нажимай на события в нужной последовательности. Нажми повторно, чтобы убрать.</p>}
     {(question.kind === 'single' || question.kind === 'multiple' || question.kind === 'order') && <div className="answer-list">
       {question.kind === 'order'
