@@ -63,8 +63,8 @@ export const knowledgeBase: { chapters: readonly ChapterRecord[] } = {
     {
       id: 'chapter-3', number: 3, title: 'Средневековое европейское общество', lessons: [
         { id: 'lords-and-vassals', number: 7, title: 'Сеньоры и вассалы', textbookPages: [73, 83], state: 'ready' },
-        { id: 'catholic-church', number: 8, title: 'Католическая церковь и духовенство', textbookPages: [84, 91], state: 'indexed' },
-        { id: 'peasants-and-townspeople', number: 9, title: 'Крестьяне и горожане', textbookPages: [92, 99], state: 'indexed' },
+        { id: 'catholic-church', number: 8, title: 'Католическая церковь и духовенство', textbookPages: [85, 92], state: 'ready' },
+        { id: 'peasants-and-townspeople', number: 9, title: 'Крестьяне и горожане', textbookPages: [93, 99], state: 'ready' },
       ],
     },
     {
