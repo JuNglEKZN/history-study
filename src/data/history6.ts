@@ -644,13 +644,13 @@ export const history6 = {
               prompt: 'Расположи события от раннего к позднему.',
               options: [
                 { id: 'schism', label: 'Разделение церквей' },
-                { id: 'albigensian', label: 'Альбигойские войны' },
+                { id: 'aquinas', label: 'Фома Аквинский сформулировал пять доказательств бытия Бога' },
                 { id: 'inquisition', label: 'Начало инквизиции' },
               ],
-              correct: ['schism', 'albigensian', 'inquisition'],
+              correct: ['schism', 'inquisition', 'aquinas'],
               points: 10,
               source: { page: 85 },
-              explanation: '1054 год → 1209–1229 годы → 1215 год.',
+              explanation: '1054 год → 1215 год → середина XIII века.',
             },
             {
               id: 'p8-orders-reflection',
