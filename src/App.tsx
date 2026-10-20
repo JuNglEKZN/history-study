@@ -192,13 +192,13 @@ function TimelineScreen({ onOpenParagraph }: { onOpenParagraph: (paragraphId: st
   const duplicateEventIds: Record<string, string> = {
     'from-antiquity:476': 'fall-western-rome-476',
     'europe-9-11:476': 'fall-western-rome-476',
-    'islam-birth:622': 'hijra-622',
+    'rise-of-islam:622': 'hijra-622',
     'europe-9-11:622': 'hijra-622',
-    'franks:732': 'poitiers-732',
+    'clovis-to-charlemagne:732': 'poitiers-732',
     'europe-9-11:732': 'poitiers-732',
-    'franks:800': 'charlemagne-emperor-800',
+    'clovis-to-charlemagne:800': 'charlemagne-emperor-800',
     'europe-9-11:800': 'charlemagne-emperor-800',
-    'franks:843': 'verdun-843',
+    'clovis-to-charlemagne:843': 'verdun-843',
     'europe-9-11:843': 'verdun-843',
   };
 
@@ -269,6 +269,8 @@ function ParagraphScreen({ paragraph, onBack, profile, award }: { paragraph: typ
       <p className="question-banner">{paragraph.introQuestion}</p><small className="muted source-citation">Учебник · с. {paragraph.pages[0]}–{paragraph.pages[paragraph.pages.length - 1]}</small>
 
       <section className="section-block"><h2>Главное</h2>{paragraph.keyIdeas.map((idea) => <article className="idea" key={idea.text}><p>{idea.text}</p><small className="muted source-citation">Учебник · с. {idea.source.page}</small></article>)}</section>
+
+      {paragraph.visualScheme && <section className="section-block"><h2>{paragraph.visualScheme.title}</h2><ol className="visual-scheme">{paragraph.visualScheme.steps.map((step) => <li key={step}>{step}</li>)}</ol></section>}
 
       <section className="section-block"><h2>Запомни</h2><div className="term-grid">{paragraph.terms.map((term) => <article className="term-card" key={term.name}><strong>{term.name}</strong><p>{term.text}</p><small className="muted source-citation">Учебник · с. {term.source.page}</small></article>)}</div></section>
 

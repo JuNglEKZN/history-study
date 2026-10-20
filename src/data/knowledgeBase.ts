@@ -6,7 +6,7 @@ export type ContentState = 'indexed' | 'ready';
 
 export type LessonRecord = {
   id: string;
-  number: number;
+  number: number | string;
   title: string;
   textbookPages: readonly [number, number];
   state: ContentState;
@@ -69,9 +69,8 @@ export const knowledgeBase: { chapters: readonly ChapterRecord[] } = {
     },
     {
       id: 'chapter-4', number: 4, title: 'Расцвет Средневековья в Западной Европе', lessons: [
-        { id: 'crusades', number: 10, title: 'Крестовые походы', textbookPages: [101, 109], state: 'indexed' },
-        { id: 'england-france-1', number: 11, title: 'Англия, Франция и государства Пиренейского полуострова в XI — начале XIV в. Часть 1', textbookPages: [110, 118], state: 'indexed' },
-        { id: 'england-france-2', number: 12, title: 'Англия, Франция и государства Пиренейского полуострова в XI — начале XIV в. Часть 2', textbookPages: [110, 118], state: 'indexed' },
+        { id: 'crusades', number: 10, title: 'Крестовые походы', textbookPages: [102, 109], state: 'ready' },
+        { id: 'england-france-pyrenees', number: '11–12', title: 'Англия, Франция и государства Пиренейского полуострова в XI — начале XIV в.', textbookPages: [110, 118], state: 'ready' },
         { id: 'holy-roman-empire', number: 13, title: 'Священная Римская империя и её соседи', textbookPages: [119, 126], state: 'indexed' },
         { id: 'western-culture', number: 14, title: 'Западноевропейская культура в XI—XIV вв.', textbookPages: [127, 134], state: 'indexed' },
       ],
