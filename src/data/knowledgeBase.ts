@@ -71,18 +71,17 @@ export const knowledgeBase: { chapters: readonly ChapterRecord[] } = {
       id: 'chapter-4', number: 4, title: 'Расцвет Средневековья в Западной Европе', lessons: [
         { id: 'crusades', number: 10, title: 'Крестовые походы', textbookPages: [102, 109], state: 'ready' },
         { id: 'england-france-pyrenees', number: '11–12', title: 'Англия, Франция и государства Пиренейского полуострова в XI — начале XIV в.', textbookPages: [110, 118], state: 'ready' },
-        { id: 'holy-roman-empire', number: 13, title: 'Священная Римская империя и её соседи', textbookPages: [119, 126], state: 'indexed' },
-        { id: 'western-culture', number: 14, title: 'Западноевропейская культура в XI—XIV вв.', textbookPages: [127, 134], state: 'indexed' },
+        { id: 'holy-roman-empire', number: 13, title: 'Священная Римская империя и её соседи', textbookPages: [119, 126], state: 'ready' },
+        { id: 'western-culture', number: 14, title: 'Западноевропейская культура в XI—XIV вв.', textbookPages: [127, 134], state: 'ready' },
       ],
     },
     {
       id: 'chapter-5', number: 5, title: 'Страны и народы Азии, Африки и Америки в Средние века', lessons: [
-        { id: 'great-steppe', number: 15, title: 'Кочевники Великой степи и их соседи в Средние века', textbookPages: [137, 147], state: 'indexed' },
-        { id: 'china', number: 16, title: 'Китай в Средние века', textbookPages: [148, 158], state: 'indexed' },
-        { id: 'japan', number: 17, title: 'Япония в Средние века', textbookPages: [148, 158], state: 'indexed' },
-        { id: 'india', number: 18, title: 'Индия в Средние века', textbookPages: [159, 168], state: 'indexed' },
-        { id: 'africa', number: 19, title: 'Народы и государства Африки', textbookPages: [169, 176], state: 'indexed' },
-        { id: 'pre-columbian-america', number: 20, title: 'Цивилизации доколумбовой Америки', textbookPages: [177, 184], state: 'indexed' },
+        { id: 'great-steppe', number: 15, title: 'Кочевники Великой степи и их соседи в Средние века', textbookPages: [138, 147], state: 'ready' },
+        { id: 'china-japan', number: '16–17', title: 'Китай и Япония в Средние века', textbookPages: [148, 158], state: 'ready' },
+        { id: 'india', number: 18, title: 'Индия в Средние века', textbookPages: [159, 167], state: 'ready' },
+        { id: 'africa', number: 19, title: 'Народы и государства Африки', textbookPages: [168, 174], state: 'ready' },
+        { id: 'pre-columbian-america', number: 20, title: 'Цивилизации доколумбовой Америки', textbookPages: [175, 182], state: 'ready' },
       ],
     },
     {
