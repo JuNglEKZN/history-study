@@ -86,8 +86,7 @@ export const knowledgeBase: { chapters: readonly ChapterRecord[] } = {
     },
     {
       id: 'chapter-6', number: 6, title: 'Осень Средневековья', lessons: [
-        { id: 'europe-14-15-1', number: 21, title: 'Европа в XIV — первой половине XV в. Часть 1', textbookPages: [187, 198], state: 'indexed' },
-        { id: 'europe-14-15-2', number: 22, title: 'Европа в XIV — первой половине XV в. Часть 2', textbookPages: [187, 198], state: 'indexed' },
+        { id: 'europe-14-15', number: '21–22', title: 'Европа в XIV — первой половине XV в.', textbookPages: [186, 196], state: 'ready' },
         { id: 'byzantium-ottomans', number: 23, title: 'Гибель Византии и возникновение Османской империи', textbookPages: [199, 210], state: 'indexed' },
         { id: 'threshold-modern-era', number: 24, title: 'Европа на пороге Нового времени', textbookPages: [211, 220], state: 'indexed' },
       ],
